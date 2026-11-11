@@ -1,0 +1,15 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/flames/layout,_N_T_/flames/page,_N_T_/flames"
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/fb3d9a03b7aad4ce0e7e940f03f564b39fee10f25b4814392952f043b3fcadb4/$/flames",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/flames/page"
+    },
+    "isFallback": false
+  }
+}

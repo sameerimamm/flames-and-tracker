@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLAMES Destiny Calculator — Predict Your Relationship</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.08); }
+    }
+    .pulse-glow {
+      animation: pulseGlow 6s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-pink-500 selection:text-white antialiased relative overflow-x-hidden">
+
+  <!-- Ambient Light Orbs -->
+  <div class="fixed top-0 left-1/4 w-[500px] h-[500px] bg-pink-600/15 rounded-full blur-[130px] pointer-events-none pulse-glow"></div>
+  <div class="fixed bottom-0 right-1/4 w-[600px] h-[600px] bg-indigo-600/15 rounded-full blur-[140px] pointer-events-none pulse-glow" style="animation-delay: -3s;"></div>
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 py-10 relative z-10 space-y-8">
+    
+    <!-- Top Header -->
+    <header class="text-center space-y-3">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-pink-500/10 border border-pink-500/30 text-pink-400 text-xs font-bold uppercase tracking-wider">
+        <span>🔥</span>
+        <span>The Timeless Friendship & Love Oracle</span>
+      </div>
+      <h1 class="text-4xl sm:text-6xl font-black tracking-tight bg-gradient-to-r from-pink-500 via-rose-400 to-indigo-400 bg-clip-text text-transparent">
+        FLAMES Calculator
+      </h1>
+      <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto">
+        Find out if your connection is <strong>Friends</strong>, <strong>Love</strong>, <strong>Affection</strong>, <strong>Marriage</strong>, <strong>Enemies</strong>, or <strong>Siblings</strong> with real-time visual proof!
+      </p>
+    </header>
+
+    <!-- Form Input Box -->
+    <div class="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+      <form id="flames-form" onsubmit="calculateFlamesUI(event)" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-4 items-center">
+          
+          <!-- Name 1 -->
+          <div class="space-y-2">
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <span class="text-pink-500">❤️</span> First Person's Name
+            </label>
+            <input 
+              id="name1-input" 
+              type="text" 
+              placeholder="e.g. Romeo" 
+              required
+              class="w-full px-4 py-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-pink-500 font-semibold text-base transition-all"
+            />
+          </div>
+
+          <!-- Swap Button -->
+          <div class="flex justify-center md:pt-6">
+            <button 
+              type="button" 
+              onclick="swapNames()" 
+              title="Swap Names"
+              class="p-3 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition-all active:scale-90"
+            >
+              ⇄
+            </button>
+          </div>
+
+          <!-- Name 2 -->
+          <div class="space-y-2">
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <span class="text-indigo-400">💙</span> Second Person's Name
+            </label>
+            <input 
+              id="name2-input" 
+              type="text" 
+              placeholder="e.g. Juliet" 
+              required
+              class="w-full px-4 py-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold text-base transition-all"
+            />
+          </div>
+        </div>
+
+        <!-- Presets & Actions -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+          <!-- Preset Chips -->
+          <div class="flex flex-wrap items-center gap-1.5 text-xs">
+            <span class="text-slate-500 font-semibold mr-1">Famous pairs:</span>
+            <button type="button" onclick="setNames('Romeo', 'Juliet')" class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition-colors">🌹 Romeo & Juliet</button>
+            <button type="button" onclick="setNames('Jack', 'Rose')" class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition-colors">🚢 Jack & Rose</button>
+            <button type="button" onclick="setNames('Jim', 'Pam')" class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition-colors">📎 Jim & Pam</button>
+            <button type="button" onclick="setNames('Barbie', 'Ken')" class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition-colors">🛼 Barbie & Ken</button>
+          </div>
+
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <button 
+              type="button" 
+              id="mute-btn" 
+              onclick="toggleSound()" 
+              class="p-3.5 rounded-2xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+              title="Toggle Sound"
+            >
+              🔊
+            </button>
+
+            <button 
+              type="submit" 
+              class="flex-1 sm:flex-initial px-8 py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 via-rose-500 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white font-extrabold text-base shadow-lg shadow-pink-500/25 transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <span>🔥 Calculate Destiny</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Results Section (Dynamic) -->
+    <div id="results-container" class="hidden space-y-6">
+
+      <!-- Step 1: Letter Cancellation Matrix -->
+      <div class="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-3 border-b border-slate-800">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-pink-500/20 text-pink-400 flex items-center justify-center text-xs font-bold">1</span>
+              Letter Cancellation Matrix
+            </h3>
+            <p class="text-xs text-slate-400">Identical letters are paired and crossed out. Remaining letters are summed.</p>
+          </div>
+          <div id="magic-count-badge" class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-mono font-bold text-pink-400 w-fit">
+            Count: 0
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-4 rounded-2xl bg-slate-800/40 border border-slate-700/60 space-y-2">
+            <div id="name1-label" class="text-xs font-semibold text-slate-300">Name 1</div>
+            <div id="name1-tiles" class="flex flex-wrap gap-2 min-h-[44px] items-center"></div>
+          </div>
+          <div class="p-4 rounded-2xl bg-slate-800/40 border border-slate-700/60 space-y-2">
+            <div id="name2-label" class="text-xs font-semibold text-slate-300">Name 2</div>
+            <div id="name2-tiles" class="flex flex-wrap gap-2 min-h-[44px] items-center"></div>
+          </div>
+        </div>
+
+        <div id="cancellation-summary" class="p-3.5 rounded-xl bg-pink-500/5 border border-pink-500/20 text-xs text-slate-300 flex items-center justify-between">
+          <!-- Summary info -->
+        </div>
+      </div>
+
+      <!-- Step 2: Elimination Stage -->
+      <div class="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs font-bold">2</span>
+              Elimination Stage
+            </h3>
+            <p class="text-xs text-slate-400">Circular elimination counting until 1 letter stands.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="stepNextRound()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200">Step Next</button>
+            <button type="button" onclick="skipToEnd()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white">Skip Animation</button>
+          </div>
+        </div>
+
+        <!-- 6 FLAMES Cards -->
+        <div id="flames-cards-grid" class="grid grid-cols-2 sm:grid-cols-6 gap-3">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Round Log -->
+        <div id="round-log" class="grid grid-cols-1 sm:grid-cols-5 gap-2 text-xs">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Step 3: Grand Reveal Card -->
+      <div id="final-card" class="hidden bg-gradient-to-b from-slate-900 to-slate-950 border border-pink-500/30 rounded-3xl p-6 sm:p-10 shadow-2xl space-y-6 relative overflow-hidden">
+        <div id="final-glow" class="absolute -top-32 -right-32 w-80 h-80 rounded-full blur-3xl opacity-25 pointer-events-none"></div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
+          <div class="flex items-center gap-5">
+            <div id="final-emoji-box" class="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl flex items-center justify-center text-4xl sm:text-5xl shadow-xl shrink-0">
+              💖
+            </div>
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span id="final-badge" class="px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider bg-pink-500/20 text-pink-400 border border-pink-500/30">Letter L</span>
+                <span id="final-count-text" class="text-xs text-slate-400">Magic Count: 0</span>
+              </div>
+              <h2 id="final-word" class="text-3xl sm:text-4xl font-black tracking-tight text-white">Love</h2>
+              <p id="final-tagline" class="text-sm font-medium text-slate-400">Passionate Lovers</p>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-slate-800/60 border border-slate-700 flex items-center gap-4 shrink-0 sm:self-center">
+            <div class="space-y-1">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Compatibility</div>
+              <div id="final-score" class="text-2xl font-black text-pink-400">98%</div>
+            </div>
+            <div class="w-24 bg-slate-700 h-3 rounded-full overflow-hidden">
+              <div id="final-score-bar" class="h-full bg-gradient-to-r from-pink-500 to-indigo-500 transition-all duration-1000" style="width: 98%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10 border-t border-slate-800 pt-4">
+          <div class="p-4 rounded-2xl bg-slate-800/40 border border-slate-700/60 space-y-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Connection Profile</h4>
+            <p id="final-desc" class="text-sm text-slate-300 leading-relaxed"></p>
+          </div>
+          <div class="p-4 rounded-2xl bg-slate-800/40 border border-slate-700/60 space-y-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Relationship Advice</h4>
+            <p id="final-advice" class="text-sm text-slate-300 italic leading-relaxed"></p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-800 relative z-10">
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="copyShareText()" id="share-btn" class="px-4 py-2.5 rounded-xl bg-white text-slate-900 font-bold text-xs hover:bg-slate-200 transition-all active:scale-95">
+              📋 Share Result
+            </button>
+            <button type="button" onclick="downloadImageCard()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs transition-all active:scale-95">
+              🖼️ Save Image Card
+            </button>
+          </div>
+          <button type="button" onclick="resetForm()" class="px-4 py-2 rounded-xl text-pink-400 hover:bg-pink-500/10 text-xs font-bold transition-colors">
+            ✨ Test Another Pair
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Container -->
+    <div id="history-section" class="hidden bg-slate-900/60 border border-slate-800 rounded-3xl p-5 space-y-3">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Recent Tests</h3>
+        <button type="button" onclick="clearHistory()" class="text-xs text-slate-500 hover:text-red-400 transition-colors">Clear</button>
+      </div>
+      <div id="history-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2"></div>
+    </div>
+
+  </div>
+
+  <script>
+    // Audio synthesizer
+    let soundMuted = false;
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (soundMuted) return null;
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playTone(freq, type = 'sine', duration = 0.08) {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      try {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function toggleSound() {
+      soundMuted = !soundMuted;
+      document.getElementById('mute-btn').innerText = soundMuted ? '🔇' : '🔊';
+    }
+
+    const FLAMES_DICT = {
+      F: { word: 'Friends', emoji: '🤝', tagline: 'Best Friends for Life', desc: 'You share an unbreakable foundation of trust, laughter, and inside jokes. Camraderie at its highest level.', advice: 'Never take each other for granted. Plan that road trip you keep discussing!', score: 89, grad: 'from-sky-500 to-blue-600', color: 'rgb(14, 165, 233)' },
+      L: { word: 'Love', emoji: '💖', tagline: 'Passionate Lovers', desc: 'Electric chemistry and undeniable sparks! Your hearts beat to the same rhythm. Cupid fired a laser beam.', advice: 'Wear your heart on your sleeve. Thoughtful small gestures will keep the spark burning bright forever.', score: 98, grad: 'from-pink-500 to-rose-600', color: 'rgb(244, 63, 94)' },
+      A: { word: 'Affection', emoji: '🥰', tagline: 'Deep Warmth & Caring', desc: 'A gentle, soothing bond filled with genuine adoration. You are each other’s calm harbor in a chaotic world.', advice: 'Express your appreciation often. A warm hug or unexpected kind word means the world.', score: 93, grad: 'from-amber-400 to-orange-500', color: 'rgb(245, 158, 11)' },
+      M: { word: 'Marriage', emoji: '💍', tagline: 'Happily Ever After', desc: 'Written in the stars! Rock-solid compatibility, shared values, and life partnership potential.', advice: 'Start picking wedding cake flavors and honeymoon destinations! Teamwork makes the dream work.', score: 99, grad: 'from-emerald-400 to-teal-600', color: 'rgb(16, 185, 129)' },
+      E: { word: 'Enemies', emoji: '⚔️', tagline: 'Fierce Rivals / Enemies-to-Lovers?', desc: 'High drama, fiery arguments, and stubborn wills! You clash like lightning, but enemies often make the most unforgettable lovers.', advice: 'Channel this intense energy into healthy competition. You might just surprise each other.', score: 54, grad: 'from-red-500 to-rose-700', color: 'rgb(239, 68, 68)' },
+      S: { word: 'Siblings', emoji: '👫', tagline: 'Chaotic Sibling Camaraderie', desc: 'Stealing snacks, playful teasing, and fighting over the TV remote — but fiercely protecting each other from the world.', advice: 'Stop stealing their clothes without asking! Keep looking out for each other.', score: 84, grad: 'from-purple-500 to-indigo-600', color: 'rgb(139, 92, 246)' },
+      '✨': { word: 'Soulmates', emoji: '✨', tagline: 'Cosmic Twin Resonance', desc: 'Zero difference! Every single letter in your names matched in total harmony. Two bodies, one cosmic soul.', advice: 'Cherish this supernatural connection. You finish each other’s sentences and read each other’s minds.', score: 100, grad: 'from-amber-400 via-pink-500 to-purple-600', color: 'rgb(236, 72, 153)' }
+    };
+
+    const PAIR_COLORS = [
+      'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+      'bg-blue-500/20 text-blue-300 border-blue-500/40',
+      'bg-purple-500/20 text-purple-300 border-purple-500/40',
+      'bg-amber-500/20 text-amber-300 border-amber-500/40',
+      'bg-rose-500/20 text-rose-300 border-rose-500/40',
+      'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    ];
+
+    let currentCalculation = null;
+    let animRound = 0;
+    let animTimer = null;
+    let eliminatedList = [];
+
+    function setNames(n1, n2) {
+      document.getElementById('name1-input').value = n1;
+      document.getElementById('name2-input').value = n2;
+      calculateFlamesUI();
+    }
+
+    function swapNames() {
+      const i1 = document.getElementById('name1-input');
+      const i2 = document.getElementById('name2-input');
+      const temp = i1.value;
+      i1.value = i2.value;
+      i2.value = temp;
+      if (currentCalculation) calculateFlamesUI();
+    }
+
+    function calculateFlamesUI(e) {
+      if (e) e.preventDefault();
+      const n1 = document.getElementById('name1-input').value.trim();
+      const n2 = document.getElementById('name2-input').value.trim();
+      if (!n1 || !n2) return;
+
+      const clean1 = n1.toLowerCase().replace(/[^a-z]/g, '');
+      const clean2 = n2.toLowerCase().replace(/[^a-z]/g, '');
+
+      const chars1 = clean1.split('').map((c, i) => ({ id: `1-${i}`, char: c.toUpperCase(), matched: false }));
+      const chars2 = clean2.split('').map((c, i) => ({ id: `2-${i}`, char: c.toUpperCase(), matched: false }));
+
+      let pairCount = 0;
+      for (let i = 0; i < chars1.length; i++) {
+        if (chars1[i].matched) continue;
+        for (let j = 0; j < chars2.length; j++) {
+          if (!chars2[j].matched && chars2[j].char === chars1[i].char) {
+            chars1[i].matched = true;
+            chars1[i].pair = pairCount;
+            chars2[j].matched = true;
+            chars2[j].pair = pairCount;
+            pairCount++;
+            break;
+          }
+        }
+      }
+
+      const rem1 = chars1.filter(c => !c.matched).map(c => c.char);
+      const rem2 = chars2.filter(c => !c.matched).map(c => c.char);
+      const remainingCount = rem1.length + rem2.length;
+      const isSoulmate = remainingCount === 0;
+
+      // Calculate rounds
+      const rounds = [];
+      let list = ['F', 'L', 'A', 'M', 'E', 'S'];
+      let startIdx = 0;
+
+      if (!isSoulmate) {
+        for (let r = 1; r <= 5; r++) {
+          const elimIdx = (startIdx + remainingCount - 1) % list.length;
+          const elimLetter = list[elimIdx];
+          const before = [...list];
+          list.splice(elimIdx, 1);
+          rounds.push({
+            round: r,
+            eliminated: elimLetter,
+            remainingBefore: before,
+            remainingAfter: [...list]
+          });
+          startIdx = elimIdx % list.length;
+        }
+      }
+
+      const finalKey = isSoulmate ? '✨' : list[0];
+      currentCalculation = {
+        name1: n1,
+        name2: n2,
+        chars1,
+        chars2,
+        rem1,
+        rem2,
+        remainingCount,
+        isSoulmate,
+        rounds,
+        finalKey
+      };
+
+      renderResults();
+      saveToHistory();
+    }
+
+    function renderResults() {
+      const calc = currentCalculation;
+      document.getElementById('results-container').classList.remove('hidden');
+
+      // 1. Matrix
+      document.getElementById('magic-count-badge').innerText = `Total Count: ${calc.remainingCount}`;
+      document.getElementById('name1-label').innerText = `${calc.name1} (${calc.rem1.length} remaining)`;
+      document.getElementById('name2-label').innerText = `${calc.name2} (${calc.rem2.length} remaining)`;
+
+      const t1 = document.getElementById('name1-tiles');
+      const t2 = document.getElementById('name2-tiles');
+      t1.innerHTML = '';
+      t2.innerHTML = '';
+
+      calc.chars1.forEach(c => {
+        const el = document.createElement('div');
+        if (c.matched) {
+          const pal = PAIR_COLORS[c.pair % PAIR_COLORS.length];
+          el.className = `px-3 py-1.5 rounded-lg border font-mono text-sm font-bold opacity-50 line-through ${pal}`;
+        } else {
+          el.className = 'px-3 py-1.5 rounded-lg bg-pink-500/20 border-2 border-pink-500 text-pink-400 font-mono text-sm font-bold shadow-sm';
+        }
+        el.innerText = c.char;
+        t1.appendChild(el);
+      });
+
+      calc.chars2.forEach(c => {
+        const el = document.createElement('div');
+        if (c.matched) {
+          const pal = PAIR_COLORS[c.pair % PAIR_COLORS.length];
+          el.className = `px-3 py-1.5 rounded-lg border font-mono text-sm font-bold opacity-50 line-through ${pal}`;
+        } else {
+          el.className = 'px-3 py-1.5 rounded-lg bg-indigo-500/20 border-2 border-indigo-500 text-indigo-400 font-mono text-sm font-bold shadow-sm';
+        }
+        el.innerText = c.char;
+        t2.appendChild(el);
+      });
+
+      document.getElementById('cancellation-summary').innerHTML = `
+        <span>Remaining: <strong>${calc.rem1.join(', ') || 'None'}</strong> + <strong>${calc.rem2.join(', ') || 'None'}</strong></span>
+        <span class="font-bold text-pink-400 font-mono">${calc.rem1.length} + ${calc.rem2.length} = ${calc.remainingCount}</span>
+      `;
+
+      // 2. Elimination Stage
+      renderFlamesGrid();
+      startEliminationAnim();
+    }
+
+    function renderFlamesGrid() {
+      const grid = document.getElementById('flames-cards-grid');
+      grid.innerHTML = '';
+      const letters = ['F', 'L', 'A', 'M', 'E', 'S'];
+
+      letters.forEach(lettr => {
+        const info = FLAMES_DICT[lettr];
+        const isElim = eliminatedList.includes(lettr);
+        const isFinal = animRound >= 5 && lettr === currentCalculation.finalKey;
+
+        const card = document.createElement('div');
+        card.id = `card-${lettr}`;
+        card.className = `relative flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all select-none ${
+          isFinal
+            ? `bg-gradient-to-b ${info.grad} text-white border-transparent shadow-xl scale-105 animate-pulse`
+            : isElim
+            ? 'bg-slate-900 border-slate-800 text-slate-600 opacity-30 scale-95'
+            : 'bg-slate-800/80 border-slate-700 text-slate-200'
+        }`;
+
+        card.innerHTML = `
+          ${isElim ? '<div class="absolute inset-0 flex items-center justify-center pointer-events-none"><div class="w-full h-0.5 bg-red-500 rotate-45 absolute"></div><div class="w-full h-0.5 bg-red-500 -rotate-45 absolute"></div></div>' : ''}
+          <span class="text-3xl sm:text-4xl font-black">${lettr}</span>
+          <span class="text-[11px] font-semibold mt-1 text-slate-400">${info.word}</span>
+          <span class="text-sm mt-0.5">${info.emoji}</span>
+        `;
+        grid.appendChild(card);
+      });
+
+      // Update round log
+      const log = document.getElementById('round-log');
+      log.innerHTML = '';
+      if (currentCalculation.rounds) {
+        currentCalculation.rounds.forEach((r, idx) => {
+          const done = idx < animRound;
+          const el = document.createElement('div');
+          el.className = `p-3 rounded-xl border ${done ? 'bg-slate-800/60 border-slate-700 text-slate-300' : 'bg-transparent border-dashed border-slate-800 opacity-40 text-slate-500'}`;
+          el.innerHTML = `<div class="font-bold">Round ${r.round}</div><div>${done ? `Eliminated <strong class="text-red-400">${r.eliminated}</strong>` : 'Pending'}</div>`;
+          log.appendChild(el);
+        });
+      }
+    }
+
+    function startEliminationAnim() {
+      if (animTimer) clearInterval(animTimer);
+      eliminatedList = [];
+      animRound = 0;
+      document.getElementById('final-card').classList.add('hidden');
+
+      if (currentCalculation.isSoulmate) {
+        showFinalCard();
+        return;
+      }
+
+      animTimer = setInterval(() => {
+        if (animRound < currentCalculation.rounds.length) {
+          const elim = currentCalculation.rounds[animRound].eliminated;
+          eliminatedList.push(elim);
+          playTone(320, 'triangle', 0.15);
+          animRound++;
+          renderFlamesGrid();
+        } else {
+          clearInterval(animTimer);
+          showFinalCard();
+        }
+      }, 700);
+    }
+
+    function stepNextRound() {
+      if (animTimer) clearInterval(animTimer);
+      if (animRound < currentCalculation.rounds.length) {
+        const elim = currentCalculation.rounds[animRound].eliminated;
+        eliminatedList.push(elim);
+        playTone(320, 'triangle', 0.15);
+        animRound++;
+        renderFlamesGrid();
+        if (animRound >= currentCalculation.rounds.length) {
+          showFinalCard();
+        }
+      }
+    }
+
+    function skipToEnd() {
+      if (animTimer) clearInterval(animTimer);
+      if (!currentCalculation.isSoulmate) {
+        eliminatedList = currentCalculation.rounds.map(r => r.eliminated);
+        animRound = 5;
+        renderFlamesGrid();
+      }
+      showFinalCard();
+    }
+
+    function showFinalCard() {
+      const calc = currentCalculation;
+      const meta = FLAMES_DICT[calc.finalKey];
+      const card = document.getElementById('final-card');
+      card.classList.remove('hidden');
+
+      document.getElementById('final-glow').style.backgroundColor = meta.color;
+      document.getElementById('final-emoji-box').innerText = meta.emoji;
+      document.getElementById('final-emoji-box').className = `w-20 h-20 sm:w-24 sm:h-24 rounded-3xl flex items-center justify-center text-4xl sm:text-5xl shadow-xl shrink-0 bg-gradient-to-tr ${meta.grad}`;
+      document.getElementById('final-badge').innerText = calc.isSoulmate ? 'Cosmic Match' : `Letter ${calc.finalKey}`;
+      document.getElementById('final-count-text').innerText = `Magic Count: ${calc.remainingCount}`;
+      document.getElementById('final-word').innerText = meta.word;
+      document.getElementById('final-tagline').innerText = meta.tagline;
+      document.getElementById('final-score').innerText = `${meta.score}%`;
+      document.getElementById('final-score-bar').style.width = `${meta.score}%`;
+      document.getElementById('final-desc').innerText = meta.desc;
+      document.getElementById('final-advice').innerText = `"${meta.advice}"`;
+
+      // Trigger Confetti
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 }
+      });
+
+      // Play fanfare
+      playTone(523.25, 'sine', 0.2);
+      setTimeout(() => playTone(659.25, 'sine', 0.2), 100);
+      setTimeout(() => playTone(783.99, 'sine', 0.2), 200);
+      setTimeout(() => playTone(1046.5, 'sine', 0.4), 300);
+    }
+
+    function copyShareText() {
+      const calc = currentCalculation;
+      const meta = FLAMES_DICT[calc.finalKey];
+      const text = `🔥 FLAMES Destiny Calculator 🔥\n` +
+        `👤 ${calc.name1} + 👤 ${calc.name2}\n` +
+        `🔢 Magic Count: ${calc.remainingCount}\n` +
+        `✨ Result: ${meta.emoji} ${meta.word.toUpperCase()} (${meta.tagline})\n` +
+        `💖 Compatibility: ${meta.score}%\n` +
+        `💡 Advice: "${meta.advice}"`;
+      
+      navigator.clipboard.writeText(text);
+      const btn = document.getElementById('share-btn');
+      btn.innerText = '✅ Copied!';
+      setTimeout(() => btn.innerText = '📋 Share Result', 2000);
+    }
+
+    function downloadImageCard() {
+      const calc = currentCalculation;
+      const meta = FLAMES_DICT[calc.finalKey];
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 1200;
+      canvas.height = 630;
+
+      // Gradient BG
+      const grad = ctx.createLinearGradient(0, 0, 1200, 630);
+      grad.addColorStop(0, '#090d16');
+      grad.addColorStop(0.5, '#1e1b4b');
+      grad.addColorStop(1, '#0f172a');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1200, 630);
+
+      // Header
+      ctx.fillStyle = '#ec4899';
+      ctx.font = 'bold 26px system-ui, sans-serif';
+      ctx.fillText('🔥 FLAMES DESTINY CALCULATOR', 80, 80);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 50px system-ui, sans-serif';
+      ctx.fillText(`${calc.name1} & ${calc.name2}`, 80, 160);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '22px system-ui, sans-serif';
+      ctx.fillText(`Magic Letter Count: ${calc.remainingCount}`, 80, 205);
+
+      // Container
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 2;
+      ctx.roundRect(80, 245, 1040, 260, 24);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.font = '75px system-ui, sans-serif';
+      ctx.fillText(meta.emoji, 120, 360);
+
+      ctx.fillStyle = '#f43f5e';
+      ctx.font = 'bold 54px system-ui, sans-serif';
+      ctx.fillText(meta.word.toUpperCase(), 240, 340);
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '26px system-ui, sans-serif';
+      ctx.fillText(meta.tagline, 240, 385);
+
+      ctx.fillStyle = '#10b981';
+      ctx.font = 'bold 30px system-ui, sans-serif';
+      ctx.fillText(`${meta.score}% Compatibility`, 240, 440);
+
+      const link = document.createElement('a');
+      link.download = `FLAMES_${calc.name1}_${calc.name2}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function resetForm() {
+      document.getElementById('name1-input').value = '';
+      document.getElementById('name2-input').value = '';
+      document.getElementById('results-container').classList.add('hidden');
+      currentCalculation = null;
+    }
+
+    function saveToHistory() {
+      const calc = currentCalculation;
+      let history = JSON.parse(localStorage.getItem('flames_standalone_history') || '[]');
+      history = [
+        { n1: calc.name1, n2: calc.name2, key: calc.finalKey, count: calc.remainingCount },
+        ...history.filter(h => !(h.n1 === calc.name1 && h.n2 === calc.name2))
+      ].slice(0, 9);
+      localStorage.setItem('flames_standalone_history', JSON.stringify(history));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const history = JSON.parse(localStorage.getItem('flames_standalone_history') || '[]');
+      const container = document.getElementById('history-section');
+      const grid = document.getElementById('history-grid');
+      if (history.length === 0) {
+        container.classList.add('hidden');
+        return;
+      }
+      container.classList.remove('hidden');
+      grid.innerHTML = '';
+      history.forEach(item => {
+        const meta = FLAMES_DICT[item.key] || FLAMES_DICT['F'];
+        const btn = document.createElement('button');
+        btn.className = 'p-3 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/60 text-left flex items-center justify-between text-xs transition-colors';
+        btn.onclick = () => setNames(item.n1, item.n2);
+        btn.innerHTML = `
+          <div>
+            <div class="font-bold text-white">${item.n1} & ${item.n2}</div>
+            <div class="text-slate-400 text-[11px]">${meta.emoji} ${meta.word} • Count ${item.count}</div>
+          </div>
+          <span class="text-slate-500">↗</span>
+        `;
+        grid.appendChild(btn);
+      });
+    }
+
+    function clearHistory() {
+      localStorage.removeItem('flames_standalone_history');
+      renderHistory();
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      renderHistory();
+    });
+  </script>
+</body>
+</html>
