@@ -13,7 +13,7 @@ const PRESETS = [
   { pair: ['Jack', 'Rose'], label: 'Jack & Rose', icon: '📎' },
   { pair: ['Ross', 'Rachel'], label: 'Ross & Rachel', icon: '☕' },
   { pair: ['Virat', 'Anushka'], label: 'Virat & Anushka', icon: '🦾' },
-  { pair: ['Barbie', 'Ken'], label: 'Barbie & Ken', icon: '🛼' },
+  { pair: ['India', 'Italy'], label: 'India & Italy', icon: '🍫' },
   { pair: ['Amitabh', 'Rekha'], label: 'Amitabh & Rekha', icon: '🧅' },
 ];
 
