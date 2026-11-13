@@ -12,7 +12,7 @@ const PRESETS = [
   { pair: ['Salman', 'Aishwarya'], label: 'Salman & Aishwarya', icon: '👋' },
   { pair: ['Jack', 'Rose'], label: 'Jack & Rose', icon: '📎' },
   { pair: ['Ross', 'Rachel'], label: 'Ross & Rachel', icon: '☕' },
-  { pair: ['Tony Stark', 'Pepper Potts'], label: 'Tony & Pepper', icon: '🦾' },
+  { pair: ['Virat', 'Anushka'], label: 'Virat & Anushka', icon: '🦾' },
   { pair: ['Barbie', 'Ken'], label: 'Barbie & Ken', icon: '🛼' },
   { pair: ['Amitabh', 'Rekha'], label: 'Amitabh & Rekha', icon: '🧅' },
 ];
