@@ -47,16 +47,40 @@ const kvToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_
 async function getFromKV(): Promise<FlamesRecord[] | null> {
   if (!kvUrl || !kvToken) return null;
   try {
-    const res = await fetch(`${kvUrl}/get/flames_submissions`, {
+    // 1. Try standard REST command POST ["GET", "flames_submissions"]
+    const res = await fetch(kvUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${kvToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(['GET', 'flames_submissions']),
+      cache: 'no-store',
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.result) {
+        return typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
+      }
+      return [];
+    }
+
+    // 2. Fallback to GET /get/flames_submissions
+    const fallbackRes = await fetch(`${kvUrl}/get/flames_submissions`, {
       headers: { Authorization: `Bearer ${kvToken}` },
       cache: 'no-store',
     });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data.result) {
-      return typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
+
+    if (fallbackRes.ok) {
+      const data = await fallbackRes.json();
+      if (data.result) {
+        return typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
+      }
+      return [];
     }
-    return [];
+
+    return null;
   } catch (error) {
     console.error('Error reading from KV:', error);
     return null;
@@ -66,7 +90,20 @@ async function getFromKV(): Promise<FlamesRecord[] | null> {
 async function saveToKV(records: FlamesRecord[]): Promise<boolean> {
   if (!kvUrl || !kvToken) return false;
   try {
-    const res = await fetch(`${kvUrl}/set/flames_submissions`, {
+    // 1. Try standard REST command POST ["SET", "flames_submissions", value]
+    const res = await fetch(kvUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${kvToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(['SET', 'flames_submissions', JSON.stringify(records)]),
+    });
+
+    if (res.ok) return true;
+
+    // 2. Fallback to POST /set/flames_submissions
+    const fallbackRes = await fetch(`${kvUrl}/set/flames_submissions`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${kvToken}`,
@@ -74,7 +111,8 @@ async function saveToKV(records: FlamesRecord[]): Promise<boolean> {
       },
       body: JSON.stringify(JSON.stringify(records)),
     });
-    return res.ok;
+
+    return fallbackRes.ok;
   } catch (error) {
     console.error('Error saving to KV:', error);
     return false;
