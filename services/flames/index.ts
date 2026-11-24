@@ -5,6 +5,7 @@ export { EliminationStage } from './components/EliminationStage';
 export { ResultCard } from './components/ResultCard';
 export { PresetChips } from './components/PresetChips';
 export { HistoryList } from './components/HistoryList';
+export { AdminRecordsModal } from './components/AdminRecordsModal';
 export type { HistoryItem } from './components/HistoryList';
 
 export {
@@ -21,4 +22,5 @@ export type {
   LetterTile,
 } from './lib/flamesLogic';
 
+export type { FlamesRecord } from './lib/db';
 export { sound } from './lib/audio';

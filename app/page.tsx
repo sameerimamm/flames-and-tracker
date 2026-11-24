@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FlamesCalculator } from '@/services/flames';
+import { FlamesCalculator, AdminRecordsModal } from '@/services/flames';
 import { TaskFlowApp } from '@/services/taskflow';
 import { AppNavbar } from '@/shared/components/AppNavbar';
 import { useLocalStorage } from '@/shared/hooks/useLocalStorage';
@@ -9,6 +9,7 @@ import { useLocalStorage } from '@/shared/hooks/useLocalStorage';
 export default function Home() {
   const [currentService, setCurrentService] = useState<'flames' | 'taskflow'>('flames');
   const [theme, setTheme] = useLocalStorage<'light' | 'dark'>('app_theme', 'light');
+  const [showRecordsModal, setShowRecordsModal] = useState<boolean>(false);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -25,6 +26,7 @@ export default function Home() {
         onServiceChange={setCurrentService}
         theme={theme}
         onToggleTheme={handleToggleTheme}
+        onOpenRecords={() => setShowRecordsModal(true)}
       />
 
       <main className="px-4 sm:px-6 lg:px-8 py-6">
@@ -34,6 +36,11 @@ export default function Home() {
           <TaskFlowApp theme={theme} onToggleTheme={handleToggleTheme} />
         )}
       </main>
+
+      <AdminRecordsModal
+        isOpen={showRecordsModal}
+        onClose={() => setShowRecordsModal(false)}
+      />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { EliminationStage } from './EliminationStage';
 import { ResultCard } from './ResultCard';
 import { PresetChips } from './PresetChips';
 import { HistoryList, HistoryItem } from './HistoryList';
+import { AdminRecordsModal } from './AdminRecordsModal';
 import { useLocalStorage } from '@/shared/hooks/useLocalStorage';
 import {
   Flame,
@@ -18,6 +19,7 @@ import {
   ChevronDown,
   Volume2,
   VolumeX,
+  Database,
 } from 'lucide-react';
 
 export const FlamesCalculator: React.FC = () => {
@@ -29,6 +31,24 @@ export const FlamesCalculator: React.FC = () => {
   const [history, setHistory] = useLocalStorage<HistoryItem[]>('flames_history_v1', []);
   const [showHowItWorks, setShowHowItWorks] = useState<boolean>(false);
   const [inputError, setInputError] = useState<string | null>(null);
+  const [showAdminModal, setShowAdminModal] = useState<boolean>(false);
+  const [dbCount, setDbCount] = useState<number>(0);
+
+  const fetchTotalSubmissionsCount = async () => {
+    try {
+      const res = await fetch('/api/records', { cache: 'no-store' });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.records)) {
+        setDbCount(data.records.length);
+      }
+    } catch {
+      // Ignore background sync errors
+    }
+  };
+
+  useEffect(() => {
+    fetchTotalSubmissionsCount();
+  }, []);
 
   // Sync sound
   useEffect(() => {
@@ -51,7 +71,7 @@ export const FlamesCalculator: React.FC = () => {
 
     sound.playMatch();
 
-    // Add to history
+    // Add to local history
     const newItem: HistoryItem = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       name1: result.name1,
@@ -62,6 +82,22 @@ export const FlamesCalculator: React.FC = () => {
     };
 
     setHistory((prev) => [newItem, ...prev.filter((item) => !(item.name1 === result.name1 && item.name2 === result.name2))].slice(0, 15));
+
+    // Save to Database (Cloud / Server)
+    fetch('/api/records', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name1: result.name1,
+        name2: result.name2,
+        resultLetter: result.finalLetter,
+        resultWord: result.resultMeta.word,
+        resultEmoji: result.resultMeta.emoji,
+        remainingCount: result.remainingCount,
+      }),
+    })
+      .then(() => fetchTotalSubmissionsCount())
+      .catch((err) => console.warn('Could not sync record to DB:', err));
   };
 
   const handleSwap = () => {
@@ -97,9 +133,21 @@ export const FlamesCalculator: React.FC = () => {
     <div className="w-full max-w-4xl mx-auto space-y-8 py-4 sm:py-8">
       {/* Hero Header */}
       <div className="text-center space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-500/10 border border-pink-500/30 text-pink-600 dark:text-pink-400 text-xs font-bold uppercase tracking-wider">
-          <Flame className="w-3.5 h-3.5 fill-pink-500 text-pink-500 animate-pulse" />
-          <span>The Timeless Friendship & Love Oracle</span>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-500/10 border border-pink-500/30 text-pink-600 dark:text-pink-400 text-xs font-bold uppercase tracking-wider">
+            <Flame className="w-3.5 h-3.5 fill-pink-500 text-pink-500 animate-pulse" />
+            <span>The Timeless Friendship & Love Oracle</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowAdminModal(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold transition-all active:scale-95 shadow-sm"
+            title="View whoever used this calculator and manage submissions"
+          >
+            <Database className="w-3.5 h-3.5" />
+            <span>Submissions Log ({dbCount})</span>
+          </button>
         </div>
 
         <h1 className="text-4xl sm:text-5xl font-black tracking-tight bg-gradient-to-r from-pink-500 via-rose-500 to-indigo-600 bg-clip-text text-transparent">
@@ -293,6 +341,16 @@ export const FlamesCalculator: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Admin / Submissions Database Modal */}
+      <AdminRecordsModal
+        isOpen={showAdminModal}
+        onClose={() => {
+          setShowAdminModal(false);
+          fetchTotalSubmissionsCount();
+        }}
+        onRecordDeleted={fetchTotalSubmissionsCount}
+      />
     </div>
   );
 };
