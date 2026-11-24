@@ -17,20 +17,8 @@ export interface FlamesRecord {
   ref?: string;
 }
 
-// In-memory fallback cache
-let memoryCache: FlamesRecord[] = [
-  {
-    id: 'demo-1',
-    name1: 'Romeo',
-    name2: 'Juliet',
-    resultLetter: 'E',
-    resultWord: 'Enemies',
-    resultEmoji: '⚔️',
-    remainingCount: 9,
-    timestamp: Date.now() - 3600000,
-    clientInfo: 'Demo Record',
-  },
-];
+// In-memory fallback cache (starts empty, only logs genuine user submissions)
+let memoryCache: FlamesRecord[] = [];
 
 // Determine writable file path
 function getStorageFilePath(): string {

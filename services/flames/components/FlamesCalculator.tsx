@@ -98,7 +98,7 @@ export const FlamesCalculator: React.FC = () => {
     sound.enabled = !isSoundMuted;
   }, [isSoundMuted]);
 
-  const handleCalculate = (n1 = name1, n2 = name2) => {
+  const handleCalculate = (n1 = name1, n2 = name2, isExplicitSubmission = false) => {
     const clean1 = n1.trim().replace(/[^a-zA-Z]/g, '');
     const clean2 = n2.trim().replace(/[^a-zA-Z]/g, '');
 
@@ -126,45 +126,50 @@ export const FlamesCalculator: React.FC = () => {
 
     setHistory((prev) => [newItem, ...prev.filter((item) => !(item.name1 === result.name1 && item.name2 === result.name2))].slice(0, 15));
 
-    // Silently save calculation to Database with location/device context
-    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    const refTag = urlParams?.get('ref') || urlParams?.get('u') || undefined;
+    // ONLY save to database if explicitly submitted by user (not via preset suggestions or swap)
+    if (isExplicitSubmission) {
+      const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      const refTag = urlParams?.get('ref') || urlParams?.get('u') || undefined;
 
-    fetch('/api/records', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name1: result.name1,
-        name2: result.name2,
-        resultLetter: result.finalLetter,
-        resultWord: result.resultMeta.word,
-        resultEmoji: result.resultMeta.emoji,
-        remainingCount: result.remainingCount,
-        visitorId: getVisitorId(),
-        deviceHint: getClientDeviceHint(),
-        ref: refTag,
-      }),
-    }).catch((err) => console.warn('Could not sync record:', err));
+      fetch('/api/records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name1: result.name1,
+          name2: result.name2,
+          resultLetter: result.finalLetter,
+          resultWord: result.resultMeta.word,
+          resultEmoji: result.resultMeta.emoji,
+          remainingCount: result.remainingCount,
+          visitorId: getVisitorId(),
+          deviceHint: getClientDeviceHint(),
+          ref: refTag,
+        }),
+      }).catch((err) => console.warn('Could not sync record:', err));
+    }
   };
 
   const handleSwap = () => {
     setName1(name2);
     setName2(name1);
     if (calculation) {
-      handleCalculate(name2, name1);
+      handleCalculate(name2, name1, false);
     }
   };
 
+  // Selecting a suggestion chip fills the names, but does NOT submit or log until "Calculate Destiny" is clicked
   const handlePresetSelect = (presetName1: string, presetName2: string) => {
     setName1(presetName1);
     setName2(presetName2);
-    handleCalculate(presetName1, presetName2);
+    setInputError(null);
+    setCalculation(null);
+    setIsAnimationDone(false);
   };
 
   const handleSelectHistory = (item: HistoryItem) => {
     setName1(item.name1);
     setName2(item.name2);
-    handleCalculate(item.name1, item.name2);
+    handleCalculate(item.name1, item.name2, false);
   };
 
   const handleClearHistory = () => {
@@ -204,7 +209,7 @@ export const FlamesCalculator: React.FC = () => {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            handleCalculate();
+            handleCalculate(name1, name2, true);
           }}
           className="space-y-6 relative z-10"
         >
