@@ -1,14 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Flame, CheckSquare, Sun, Moon, Database } from 'lucide-react';
+import { Flame, CheckSquare, Sun, Moon } from 'lucide-react';
 
 interface AppNavbarProps {
   currentService: 'flames' | 'taskflow';
   onServiceChange?: (service: 'flames' | 'taskflow') => void;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
-  onOpenRecords?: () => void;
 }
 
 export const AppNavbar: React.FC<AppNavbarProps> = ({
@@ -16,7 +15,6 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
   onServiceChange,
   theme,
   onToggleTheme,
-  onOpenRecords,
 }) => {
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 dark:bg-slate-950/70 border-b border-slate-200/80 dark:border-slate-800/80 transition-colors">
@@ -69,20 +67,8 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
           </button>
         </div>
 
-        {/* Right Actions: Records & Theme Toggle */}
+        {/* Theme Toggle */}
         <div className="flex items-center gap-2">
-          {onOpenRecords && (
-            <button
-              type="button"
-              onClick={onOpenRecords}
-              className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700/80 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-colors"
-              title="View Submissions Database"
-            >
-              <Database className="w-3.5 h-3.5 text-indigo-500" />
-              <span className="hidden sm:inline">Records</span>
-            </button>
-          )}
-
           <button
             type="button"
             onClick={onToggleTheme}
