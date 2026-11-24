@@ -11,6 +11,10 @@ export interface FlamesRecord {
   remainingCount: number;
   timestamp: number;
   clientInfo?: string;
+  location?: string;
+  device?: string;
+  visitorId?: string;
+  ref?: string;
 }
 
 // In-memory fallback cache

@@ -23,6 +23,50 @@ import {
   X,
 } from 'lucide-react';
 
+// Helper to identify unique returning visitors and device hints
+function getVisitorId(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    let vid = localStorage.getItem('flames_vid');
+    if (!vid) {
+      vid = 'v_' + Math.random().toString(36).substring(2, 8);
+      localStorage.setItem('flames_vid', vid);
+    }
+    return vid;
+  } catch {
+    return '';
+  }
+}
+
+function getClientDeviceHint(): string | undefined {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const ua = navigator.userAgent || '';
+    const w = window.screen.width;
+    const h = window.screen.height;
+
+    // Detect iPhone screen points
+    if (/iPhone/i.test(ua)) {
+      let model = 'iPhone';
+      if ((w === 402 && h === 874) || (w === 874 && h === 402)) model = 'iPhone 16 Pro';
+      else if ((w === 440 && h === 956) || (w === 956 && h === 440)) model = 'iPhone 16 Pro Max';
+      else if ((w === 393 && h === 852) || (w === 852 && h === 393)) model = 'iPhone 15 / 16';
+      else if ((w === 430 && h === 932) || (w === 932 && h === 430)) model = 'iPhone 15 / 16 Plus';
+      else if ((w === 390 && h === 844) || (w === 844 && h === 390)) model = 'iPhone 13 / 14';
+      else if ((w === 428 && h === 926) || (w === 926 && h === 428)) model = 'iPhone 13 / 14 Pro Max';
+      else if ((w === 375 && h === 812) || (w === 812 && h === 375)) model = 'iPhone X / 11 / 12 mini';
+      else model = `iPhone (${w}x${h})`;
+
+      if (/Instagram/i.test(ua)) return `${model} • Instagram`;
+      if (/WhatsApp/i.test(ua)) return `${model} • WhatsApp`;
+      return `${model} • Safari`;
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export const FlamesCalculator: React.FC = () => {
   const [name1, setName1] = useState<string>('');
   const [name2, setName2] = useState<string>('');
@@ -82,7 +126,10 @@ export const FlamesCalculator: React.FC = () => {
 
     setHistory((prev) => [newItem, ...prev.filter((item) => !(item.name1 === result.name1 && item.name2 === result.name2))].slice(0, 15));
 
-    // Silently save calculation to Database
+    // Silently save calculation to Database with location/device context
+    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const refTag = urlParams?.get('ref') || urlParams?.get('u') || undefined;
+
     fetch('/api/records', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -93,6 +140,9 @@ export const FlamesCalculator: React.FC = () => {
         resultWord: result.resultMeta.word,
         resultEmoji: result.resultMeta.emoji,
         remainingCount: result.remainingCount,
+        visitorId: getVisitorId(),
+        deviceHint: getClientDeviceHint(),
+        ref: refTag,
       }),
     }).catch((err) => console.warn('Could not sync record:', err));
   };

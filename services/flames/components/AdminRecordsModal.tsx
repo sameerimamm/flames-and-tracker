@@ -13,6 +13,8 @@ import {
   MapPin,
   Download,
   AlertTriangle,
+  Smartphone,
+  Tag,
 } from 'lucide-react';
 
 interface AdminRecordsModalProps {
@@ -279,21 +281,50 @@ export const AdminRecordsModal: React.FC<AdminRecordsModalProps> = ({
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400">
-                          <span className="flex items-center gap-1 font-mono">
-                            Count: <strong>{r.remainingCount}</strong>
-                          </span>
-                          <span>•</span>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-slate-400" />
-                            <span>{dateStr}</span>
-                          </span>
-                          {r.clientInfo && (
+                        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+                          {/* Location */}
+                          {(r.location || r.clientInfo) && (
+                            <span className="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300 font-medium">
+                              <MapPin className="w-3 h-3 text-rose-500 shrink-0" />
+                              <span>{r.location || r.clientInfo}</span>
+                            </span>
+                          )}
+
+                          {/* Device / Browser */}
+                          {r.device && (
                             <>
                               <span>•</span>
-                              <span className="flex items-center gap-1 truncate max-w-[150px]">
-                                <MapPin className="w-3 h-3 text-slate-400" />
-                                <span>{r.clientInfo}</span>
+                              <span className="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300">
+                                <Smartphone className="w-3 h-3 text-indigo-500 shrink-0" />
+                                <span>{r.device}</span>
+                              </span>
+                            </>
+                          )}
+
+                          {/* Time */}
+                          <span>•</span>
+                          <span className="inline-flex items-center gap-1">
+                            <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span>{dateStr}</span>
+                          </span>
+
+                          {/* Visitor Tag */}
+                          {r.visitorId && (
+                            <>
+                              <span>•</span>
+                              <span className="px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-mono text-[10px]" title="Unique Visitor ID">
+                                {r.visitorId}
+                              </span>
+                            </>
+                          )}
+
+                          {/* Ref Tag */}
+                          {r.ref && (
+                            <>
+                              <span>•</span>
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-semibold text-[10px]" title="Referral Tag">
+                                <Tag className="w-2.5 h-2.5" />
+                                <span>{r.ref}</span>
                               </span>
                             </>
                           )}
