@@ -43,11 +43,11 @@ async function ensurePostgresTable() {
         id VARCHAR(255) PRIMARY KEY,
         name1 VARCHAR(255) NOT NULL,
         name2 VARCHAR(255) NOT NULL,
-        result_letter VARCHAR(10) NOT NULL,
+        result_letter VARCHAR(10) DEFAULT '?',
         result_word VARCHAR(50) NOT NULL,
         result_emoji VARCHAR(20) NOT NULL,
-        remaining_count INT NOT NULL,
-        timestamp BIGINT NOT NULL,
+        remaining_count INT DEFAULT 0,
+        timestamp BIGINT DEFAULT 0,
         client_info TEXT,
         location TEXT,
         device TEXT,
@@ -55,6 +55,14 @@ async function ensurePostgresTable() {
         ref VARCHAR(100),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+      ALTER TABLE flames_submissions ADD COLUMN IF NOT EXISTS result_letter VARCHAR(10) DEFAULT '?';
+      ALTER TABLE flames_submissions ADD COLUMN IF NOT EXISTS remaining_count INT DEFAULT 0;
+      ALTER TABLE flames_submissions ADD COLUMN IF NOT EXISTS timestamp BIGINT DEFAULT 0;
+      ALTER TABLE flames_submissions ADD COLUMN IF NOT EXISTS client_info TEXT;
+      ALTER TABLE flames_submissions ADD COLUMN IF NOT EXISTS visitor_id VARCHAR(100);
+      ALTER TABLE flames_submissions ADD COLUMN IF NOT EXISTS ref VARCHAR(100);
+      ALTER TABLE flames_submissions ADD COLUMN IF NOT EXISTS location TEXT;
+      ALTER TABLE flames_submissions ADD COLUMN IF NOT EXISTS device TEXT;
     `);
     isTableInitialized = true;
   } catch (err) {
