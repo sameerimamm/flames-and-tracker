@@ -21,17 +21,32 @@ export interface FlamesRecord {
 // PostgreSQL Connection Pool (AWS RDS / Neon / Supabase / Vercel Postgres)
 const postgresUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 
+let lastDbError: string | null = null;
+let activeStorage: 'postgres' | 'kv' | 'memory' = 'memory';
+
+export function getDbDiagnostics() {
+  return {
+    postgresConfigured: !!postgresUrl,
+    activeStorage,
+    lastDbError,
+  };
+}
+
 let pool: Pool | null = null;
 if (postgresUrl) {
-  pool = new Pool({
-    connectionString: postgresUrl,
-    ssl: {
-      rejectUnauthorized: false,
-    },
-    max: 5,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 5000,
-  });
+  try {
+    pool = new Pool({
+      connectionString: postgresUrl,
+      ssl: {
+        rejectUnauthorized: false,
+      },
+      max: 3,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 8000,
+    });
+  } catch (err: any) {
+    lastDbError = err?.message || 'Pool creation failed';
+  }
 }
 
 let isTableInitialized = false;
@@ -65,8 +80,10 @@ async function ensurePostgresTable() {
       ALTER TABLE flames_submissions ADD COLUMN IF NOT EXISTS device TEXT;
     `);
     isTableInitialized = true;
-  } catch (err) {
+  } catch (err: any) {
+    lastDbError = `ensureTable: ${err?.message}`;
     console.error('Error ensuring Postgres table:', err);
+    throw err;
   }
 }
 
@@ -188,6 +205,9 @@ export async function getRecords(): Promise<FlamesRecord[]> {
         LIMIT 500
       `);
 
+      activeStorage = 'postgres';
+      lastDbError = null;
+
       return result.rows.map((row) => ({
         id: row.id,
         name1: row.name1,
@@ -203,7 +223,8 @@ export async function getRecords(): Promise<FlamesRecord[]> {
         visitorId: row.visitor_id || undefined,
         ref: row.ref || undefined,
       }));
-    } catch (err) {
+    } catch (err: any) {
+      lastDbError = `pg_getRecords: ${err?.message}`;
       console.error('Error fetching records from PostgreSQL:', err);
     }
   }
@@ -211,9 +232,12 @@ export async function getRecords(): Promise<FlamesRecord[]> {
   // 2. Try Cloud KV (Vercel KV / Upstash) if configured
   const cloudRecords = await getFromKV();
   if (cloudRecords !== null) {
+    activeStorage = 'kv';
     memoryCache = cloudRecords;
     return cloudRecords;
   }
+
+  activeStorage = 'memory';
 
   // 3. Try Local File Storage
   try {
@@ -270,8 +294,11 @@ export async function saveRecord(
           newRecord.ref || null,
         ]
       );
+      activeStorage = 'postgres';
+      lastDbError = null;
       return newRecord;
-    } catch (err) {
+    } catch (err: any) {
+      lastDbError = `pg_saveRecord: ${err?.message}`;
       console.error('Error saving to PostgreSQL:', err);
     }
   }

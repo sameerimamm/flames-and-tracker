@@ -4,6 +4,7 @@ import {
   saveRecord,
   deleteRecord,
   clearAllRecords,
+  getDbDiagnostics,
 } from '@/services/flames/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -12,7 +13,8 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const records = await getRecords();
-    return NextResponse.json({ success: true, records });
+    const diagnostics = getDbDiagnostics();
+    return NextResponse.json({ success: true, records, diagnostics });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: 'Failed to fetch records' },
