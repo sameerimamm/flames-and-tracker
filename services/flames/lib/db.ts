@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { Pool } from 'pg';
 
 export interface FlamesRecord {
   id: string;
@@ -15,6 +16,50 @@ export interface FlamesRecord {
   device?: string;
   visitorId?: string;
   ref?: string;
+}
+
+// PostgreSQL Connection Pool (AWS RDS / Neon / Supabase / Vercel Postgres)
+const postgresUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+
+let pool: Pool | null = null;
+if (postgresUrl) {
+  pool = new Pool({
+    connectionString: postgresUrl,
+    ssl: {
+      rejectUnauthorized: false,
+    },
+    max: 5,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
+  });
+}
+
+let isTableInitialized = false;
+async function ensurePostgresTable() {
+  if (!pool || isTableInitialized) return;
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS flames_submissions (
+        id VARCHAR(255) PRIMARY KEY,
+        name1 VARCHAR(255) NOT NULL,
+        name2 VARCHAR(255) NOT NULL,
+        result_letter VARCHAR(10) NOT NULL,
+        result_word VARCHAR(50) NOT NULL,
+        result_emoji VARCHAR(20) NOT NULL,
+        remaining_count INT NOT NULL,
+        timestamp BIGINT NOT NULL,
+        client_info TEXT,
+        location TEXT,
+        device TEXT,
+        visitor_id VARCHAR(100),
+        ref VARCHAR(100),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    isTableInitialized = true;
+  } catch (err) {
+    console.error('Error ensuring Postgres table:', err);
+  }
 }
 
 // In-memory fallback cache (starts empty, only logs genuine user submissions)
@@ -123,14 +168,46 @@ async function saveToKV(records: FlamesRecord[]): Promise<boolean> {
  * Retrieve all records from DB, newest first.
  */
 export async function getRecords(): Promise<FlamesRecord[]> {
-  // 1. Try Cloud KV (Vercel KV / Upstash) if configured
+  // 1. Try PostgreSQL if configured
+  if (pool) {
+    try {
+      await ensurePostgresTable();
+      const result = await pool.query(`
+        SELECT id, name1, name2, result_letter, result_word, result_emoji, 
+               remaining_count, timestamp, client_info, location, device, visitor_id, ref
+        FROM flames_submissions
+        ORDER BY timestamp DESC
+        LIMIT 500
+      `);
+
+      return result.rows.map((row) => ({
+        id: row.id,
+        name1: row.name1,
+        name2: row.name2,
+        resultLetter: row.result_letter,
+        resultWord: row.result_word,
+        resultEmoji: row.result_emoji,
+        remainingCount: Number(row.remaining_count),
+        timestamp: Number(row.timestamp),
+        clientInfo: row.client_info || undefined,
+        location: row.location || undefined,
+        device: row.device || undefined,
+        visitorId: row.visitor_id || undefined,
+        ref: row.ref || undefined,
+      }));
+    } catch (err) {
+      console.error('Error fetching records from PostgreSQL:', err);
+    }
+  }
+
+  // 2. Try Cloud KV (Vercel KV / Upstash) if configured
   const cloudRecords = await getFromKV();
   if (cloudRecords !== null) {
     memoryCache = cloudRecords;
     return cloudRecords;
   }
 
-  // 2. Try Local File Storage
+  // 3. Try Local File Storage
   try {
     const filePath = getStorageFilePath();
     if (fs.existsSync(filePath)) {
@@ -160,6 +237,37 @@ export async function saveRecord(
     timestamp: Date.now(),
   };
 
+  // 1. Try PostgreSQL
+  if (pool) {
+    try {
+      await ensurePostgresTable();
+      await pool.query(
+        `INSERT INTO flames_submissions (
+          id, name1, name2, result_letter, result_word, result_emoji,
+          remaining_count, timestamp, client_info, location, device, visitor_id, ref
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+        [
+          newRecord.id,
+          newRecord.name1,
+          newRecord.name2,
+          newRecord.resultLetter,
+          newRecord.resultWord,
+          newRecord.resultEmoji,
+          newRecord.remainingCount,
+          newRecord.timestamp,
+          newRecord.clientInfo || null,
+          newRecord.location || null,
+          newRecord.device || null,
+          newRecord.visitorId || null,
+          newRecord.ref || null,
+        ]
+      );
+      return newRecord;
+    } catch (err) {
+      console.error('Error saving to PostgreSQL:', err);
+    }
+  }
+
   const records = await getRecords();
   const updated = [newRecord, ...records].slice(0, 500); // Keep latest 500 records
 
@@ -183,6 +291,16 @@ export async function saveRecord(
  * Delete a specific record by ID (remove names from the database).
  */
 export async function deleteRecord(id: string): Promise<boolean> {
+  // 1. Try PostgreSQL
+  if (pool) {
+    try {
+      await pool.query('DELETE FROM flames_submissions WHERE id = $1', [id]);
+      return true;
+    } catch (err) {
+      console.error('Error deleting from PostgreSQL:', err);
+    }
+  }
+
   const records = await getRecords();
   const filtered = records.filter((r) => r.id !== id);
 
@@ -204,6 +322,16 @@ export async function deleteRecord(id: string): Promise<boolean> {
  * Clear all records from the database.
  */
 export async function clearAllRecords(): Promise<boolean> {
+  // 1. Try PostgreSQL
+  if (pool) {
+    try {
+      await pool.query('DELETE FROM flames_submissions');
+      return true;
+    } catch (err) {
+      console.error('Error clearing PostgreSQL table:', err);
+    }
+  }
+
   const savedCloud = await saveToKV([]);
   if (!savedCloud) {
     try {
